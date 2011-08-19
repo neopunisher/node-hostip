@@ -1,0 +1,32 @@
+{
+    "name": "hostinfo",
+    "description": "Uses the hostinfo database to geocode ip addresses",
+    "version": "0.0.1",
+        "tags" : ["geoip", "hostinfo", "util", "utility"],
+    "author" : "Carter Cole <node@cartercole.com>",
+    "maintainers":[
+        {
+            "name":"Carter Cole",
+            "email":"node@cartercole.com"
+        }
+    ],
+    "homepage": "http://blog.cartercole.com",
+    "repository" : {
+        "type" : "git",
+        "url" : "git://github.com/neopunisher/node-hostip.git"
+    },
+    "main" : "main.js",
+    "licenses" : [
+        {
+            "type": "MIT",
+            "url":
+"https://github.com/HerdHound/Daimyo/blob/master/LICENSE"
+        }
+    ],"bugs" :
+  { "web" : "https://github.com/neopunisher/node-hostip/issues" },
+    "dependencies": {
+        "mersenne": ">= 0.0.3"
+    },
+    "engine": [ "node >=0.4.0" ]
+}
+
