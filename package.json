@@ -19,14 +19,14 @@
     "licenses" : [
         {
             "type": "MIT",
-            "url":
-"https://github.com/HerdHound/Daimyo/blob/master/LICENSE"
+            "url": "http://www.opensource.org/licenses/mit-license.php"
         }
     ],"bugs" :
   { "web" : "https://github.com/neopunisher/node-hostip/issues" },
     "dependencies": {
-        "mersenne": ">= 0.0.3"
+        "xml2js": ">= 0.1.9",
+       "request": ">= 2.1.0"
     },
-    "engine": [ "node >=0.4.0" ]
+    "engine": [ "node >=0.4.1" ]
 }
 
