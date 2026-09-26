@@ -1,5 +1,9 @@
 # hostinfo
 
+[![CI](https://github.com/neopunisher/node-hostip/actions/workflows/ci.yml/badge.svg)](https://github.com/neopunisher/node-hostip/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/hostinfo)](https://www.npmjs.com/package/hostinfo)
+[![npm downloads](https://img.shields.io/npm/dm/hostinfo)](https://www.npmjs.com/package/hostinfo)
+
 Geocode IP addresses to city, country, and coordinates using the free, community-built [hostip.info](https://www.hostip.info/) API. Zero dependencies.
 
 ```js
@@ -64,6 +68,23 @@ lookup('8.8.8.8', (err, info) => {
 ## Accuracy
 
 hostip.info is a community-maintained database. It's free and requires no API key, but coverage and accuracy are modest compared to commercial GeoIP databases — treat results as approximate.
+
+## Development
+
+```sh
+npm test            # unit tests (mocked fetch)
+npm run test:live   # also hits the real API
+```
+
+## Releasing
+
+Publishing is automated with GitHub Actions via [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) — no npm tokens stored in the repo:
+
+1. Bump `version` in `package.json`, commit, and push (CI must be green).
+2. Create a GitHub release with a matching `vX.Y.Z` tag.
+3. The [publish workflow](.github/workflows/publish.yml) runs the tests and publishes to npm with provenance.
+
+One-time setup: on npmjs.com → package **Settings** → **Trusted Publisher**, select GitHub Actions with repository `neopunisher/node-hostip` and workflow `publish.yml`.
 
 ## License
 
