@@ -1,32 +1,46 @@
 {
-    "name": "hostinfo",
-    "description": "Uses the hostinfo database to geocode ip addresses",
-    "version": "0.0.1",
-        "tags" : ["geoip", "hostinfo", "util", "utility"],
-    "author" : "Carter Cole <node@cartercole.com>",
-    "maintainers":[
-        {
-            "name":"Carter Cole",
-            "email":"node@cartercole.com"
-        }
-    ],
-    "homepage": "http://blog.cartercole.com",
-    "repository" : {
-        "type" : "git",
-        "url" : "git://github.com/neopunisher/node-hostip.git"
-    },
-    "main" : "main.js",
-    "licenses" : [
-        {
-            "type": "MIT",
-            "url": "http://www.opensource.org/licenses/mit-license.php"
-        }
-    ],"bugs" :
-  { "web" : "https://github.com/neopunisher/node-hostip/issues" },
-    "dependencies": {
-        "xml2js": ">= 0.1.9",
-       "request": ">= 2.1.0"
-    },
-    "engine": [ "node >=0.4.1" ]
+  "name": "hostinfo",
+  "version": "1.0.0",
+  "description": "Geocode IP addresses to city, country, and coordinates with the free hostip.info API. Zero dependencies.",
+  "keywords": [
+    "geoip",
+    "hostinfo",
+    "hostip",
+    "geocode",
+    "geolocation",
+    "ip"
+  ],
+  "homepage": "https://github.com/neopunisher/node-hostip#readme",
+  "bugs": {
+    "url": "https://github.com/neopunisher/node-hostip/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neopunisher/node-hostip.git"
+  },
+  "license": "MIT",
+  "author": "Carter Cole <node@cartercole.com>",
+  "type": "commonjs",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.mjs",
+    "index.d.ts"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:live": "LIVE_TEST=1 node --test"
+  }
 }
-
