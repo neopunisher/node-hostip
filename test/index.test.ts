@@ -1,11 +1,9 @@
-'use strict';
+import assert from 'node:assert/strict';
+import { afterEach, mock, test } from 'node:test';
 
-const assert = require('node:assert/strict');
-const { test, mock, afterEach } = require('node:test');
+import { HostInfoError, lookup, type HostInfo } from '../src/index.ts';
 
-const { lookup, HostInfoError } = require('../index.js');
-
-function hostipXml(inner) {
+function hostipXml(inner: string): string {
   return [
     '<?xml version="1.0" encoding="ISO-8859-1" ?>',
     '<HostipLookupResultSet version="1.0.1" xmlns:gml="http://www.opengis.net/gml">',
@@ -48,7 +46,7 @@ const UNKNOWN_CITY_XML = hostipXml(`
    <countryAbbrev>AU</countryAbbrev>
 `);
 
-function mockFetch(body, init = {}) {
+function mockFetch(body: string, init: ResponseInit = {}) {
   return mock.method(globalThis, 'fetch', async () => {
     // The real API serves ISO-8859-1
     return new Response(Buffer.from(body, 'latin1'), { status: 200, ...init });
@@ -72,18 +70,32 @@ test('resolves city, country, and coordinates', async () => {
     longitude: -122.078,
   });
 
-  const url = fetchMock.mock.calls[0].arguments[0];
+  const url = fetchMock.mock.calls[0]!.arguments[0] as URL;
   assert.equal(url.href, 'https://api.hostip.info/?ip=8.8.8.8');
 });
 
-test('normalizes private-address placeholders to null', async () => {
+test('normalizes placeholders and the "XX" country code to null', async () => {
   mockFetch(PRIVATE_XML);
-  const result = await lookup('192.168.1.1');
+  const result = await lookup('203.0.113.1');
   assert.deepEqual(result, {
     ip: '192.168.1.1',
     city: null,
     country: null,
-    countryCode: 'XX',
+    countryCode: null,
+    latitude: null,
+    longitude: null,
+  });
+});
+
+test('answers private addresses without a request', async () => {
+  const fetchMock = mockFetch(FOUND_XML);
+  const result = await lookup('192.168.1.1');
+  assert.equal(fetchMock.mock.callCount(), 0);
+  assert.deepEqual(result, {
+    ip: '192.168.1.1',
+    city: null,
+    country: null,
+    countryCode: null,
     latitude: null,
     longitude: null,
   });
@@ -101,7 +113,7 @@ test('handles a known country with unknown city', async () => {
 test('omitting the ip queries the caller address', async () => {
   const fetchMock = mockFetch(FOUND_XML);
   await lookup();
-  const url = fetchMock.mock.calls[0].arguments[0];
+  const url = fetchMock.mock.calls[0]!.arguments[0] as URL;
   assert.equal(url.href, 'https://api.hostip.info/');
 });
 
@@ -146,7 +158,7 @@ test('supports the legacy callback style', (t, done) => {
   mockFetch(FOUND_XML);
   const returned = lookup('8.8.8.8', (error, result) => {
     assert.equal(error, null);
-    assert.equal(result.countryCode, 'US');
+    assert.equal(result?.countryCode, 'US');
     done();
   });
   assert.equal(returned, undefined);
@@ -164,12 +176,51 @@ test('callback receives errors as the first argument', (t, done) => {
 test('accepts options without an ip', async () => {
   const fetchMock = mockFetch(FOUND_XML);
   await lookup({ endpoint: 'https://example.test/api' });
-  const url = fetchMock.mock.calls[0].arguments[0];
+  const url = fetchMock.mock.calls[0]!.arguments[0] as URL;
   assert.equal(url.href, 'https://example.test/api');
 });
 
+test('rejects input that is not an IPv4 address', async () => {
+  const fetchMock = mockFetch(FOUND_XML);
+  for (const bad of ['garbage', '999.1.1.1', '2001:4860:4860::8888', '']) {
+    await assert.rejects(lookup(bad), TypeError);
+  }
+  assert.equal(fetchMock.mock.callCount(), 0);
+});
+
+test('combines a caller signal with the timeout', async () => {
+  const fetchMock = mockFetch(FOUND_XML);
+  const controller = new AbortController();
+  await lookup('8.8.8.8', { signal: controller.signal, timeout: 5000 });
+  const signal = fetchMock.mock.calls[0]!.arguments[1]!.signal!;
+  assert.equal(signal.aborted, false);
+  controller.abort();
+  assert.equal(signal.aborted, true);
+});
+
+test('timeout: 0 without a signal sends no signal', async () => {
+  const fetchMock = mockFetch(FOUND_XML);
+  await lookup('8.8.8.8', { timeout: 0 });
+  assert.equal(fetchMock.mock.calls[0]!.arguments[1]!.signal, null);
+});
+
+test('an exception thrown by the callback is not swallowed', (t, done) => {
+  mockFetch(FOUND_XML);
+  const boom = new Error('from callback');
+  const listeners = process.listeners('uncaughtException');
+  process.removeAllListeners('uncaughtException');
+  process.once('uncaughtException', (error) => {
+    for (const l of listeners) process.on('uncaughtException', l);
+    assert.equal(error, boom);
+    done();
+  });
+  lookup('8.8.8.8', () => {
+    throw boom;
+  });
+});
+
 test('live lookup against api.hostip.info', { skip: !process.env.LIVE_TEST }, async () => {
-  const result = await lookup('8.8.8.8');
+  const result: HostInfo = await lookup('8.8.8.8');
   assert.equal(result.ip, '8.8.8.8');
   assert.equal(result.countryCode, 'US');
 });

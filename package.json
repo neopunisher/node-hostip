@@ -1,14 +1,21 @@
 {
   "name": "hostinfo",
-  "version": "1.0.0",
-  "description": "Geocode IP addresses to city, country, and coordinates with the free hostip.info API. Zero dependencies.",
+  "version": "2.0.0",
+  "description": "Geocode IP addresses to city, country, and coordinates with the free hostip.info API, with reverse-DNS and traceroute fallbacks, plus WHOIS and an MCP server for AI assistants. Zero dependencies.",
   "keywords": [
     "geoip",
     "hostinfo",
     "hostip",
     "geocode",
     "geolocation",
-    "ip"
+    "ip",
+    "reverse-dns",
+    "traceroute",
+    "whois",
+    "rdap",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol"
   ],
   "homepage": "https://github.com/neopunisher/node-hostip#readme",
   "bugs": {
@@ -20,27 +27,35 @@
   },
   "license": "MIT",
   "author": "Carter Cole <node@cartercole.com>",
-  "type": "commonjs",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.mjs",
-      "require": "./index.js"
-    }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "hostinfo": "./dist/cli.js"
   },
   "files": [
-    "index.js",
-    "index.mjs",
-    "index.d.ts"
+    "dist",
+    "llms.txt"
   ],
   "sideEffects": false,
   "engines": {
-    "node": ">=18"
+    "node": ">=22.12"
   },
   "scripts": {
-    "test": "node --test",
-    "test:live": "LIVE_TEST=1 node --test"
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "npm run build && tsc",
+    "test": "npm run build && node --test \"test/**/*.test.ts\"",
+    "test:live": "LIVE_TEST=1 npm test",
+    "prepack": "npm run build"
+  },
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "typescript": "^7.0.2"
   }
 }

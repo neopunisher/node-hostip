@@ -1,0 +1,35 @@
+# hostinfo
+
+> Zero-dependency Node.js (>=22.12) library, CLI, and MCP server for IP geolocation (via the free hostip.info API, with reverse-DNS and traceroute fallbacks), reverse DNS, traceroute, and IP WHOIS (RDAP). ESM with bundled TypeScript types; `require('hostinfo')` also works.
+
+Every function returns a Promise and accepts an `options` object with `signal` (AbortSignal) and usually `timeout` (ms, 0 disables). Network/HTTP/parse failures reject with `HostInfoError` (underlying error on `.cause`). Non-IP input rejects with `TypeError`. Unknown fields are `null`, never placeholder strings. Results are approximate: hostip.info is community-maintained.
+
+## API
+
+- `lookup(ip?, { timeout=10000, signal, endpoint }) → HostInfo` — hostip.info only. IPv4 only. Omit `ip` for the caller's public IP. Private addresses return all-null fields without a request. `HostInfo = { ip, city, country, countryCode, latitude, longitude }`.
+- `locate(ip, { ...lookupOptions, trace?: boolean | TraceOptions }) → Location` — preferred for "where is this IP". Tries hostip.info, then location codes in the reverse-DNS hostname, then (only if `trace` is set) the nearest traceroute hop with a location. `Location = HostInfo & { hostname, source: 'hostip'|'hostname'|'traceroute'|null, via: TraceHop|null }`. Trust `source` in that order.
+- `trace(ip, { maxHops=30, probeTimeout=1000, giveUpAfter=5, timeout=60000, signal, geolocate=true, endpoint }) → TraceResult` — shells out to `traceroute`/`tracert` (must be installed). `TraceResult = { target, hops: TraceHop[], reached, stopped: 'reached'|'max-hops'|'gave-up'|'timeout', lastResponding }`; `TraceHop = { hop, ip|null, rtt|null, hostname, info: HostInfo|null, hint: LocationHint|null }`.
+- `reverse(ip, { timeout=5000, signal }) → string[]` — PTR records, IPv4 or IPv6; `[]` when none.
+- `whois(ip, { timeout=10000, signal, endpoint }) → WhoisInfo` — ARIN RDAP (redirects to other registries). Fields include `organization, name, handle, startAddress, endAddress, cidrs, type, country, abuseEmail, registered, updated, registry, contacts[]`.
+- `hintFromHostname(hostname) → LocationHint | null` — synchronous, offline. `LocationHint = { code, city, countryCode, latitude, longitude }`.
+- `isPrivateIPv4(ip) → boolean` — synchronous. TEST-NET ranges count as public.
+- Legacy: `lookup(ip, (err, info) => …)` callback form still works.
+
+```js
+import { locate, whois } from 'hostinfo';
+const where = await locate('8.8.8.8');   // { city: 'Mountain View, CA', source: 'hostip', … }
+const owner = await whois('8.8.8.8');    // { organization: 'Google LLC', cidrs: ['8.8.8.0/24'], … }
+```
+
+## CLI
+
+`npx hostinfo [ip|host] [--trace]`, `npx hostinfo trace|reverse|whois <ip|host>`, `--json` for machine-readable output. Hostnames resolve to their first IPv4 address.
+
+## MCP server
+
+`npx -y hostinfo mcp` runs a stdio MCP server with read-only tools: `locate` (`target?`, `trace?`), `traceroute` (`target`, `maxHops?`), `reverse_dns` (`target`), `whois` (`target`), `hostname_hint` (`hostname`). Tool results are the JSON-serialized return values of the functions above.
+
+## Docs
+
+- [README](https://github.com/neopunisher/node-hostip#readme): full API reference and examples
+- [Types](https://unpkg.com/hostinfo/dist/index.d.ts): bundled TypeScript declarations
